@@ -3,11 +3,23 @@ const crypto = require("crypto");
 const Order = require("../models/Order");
 const { sendSuccess, sendError } = require("../utils/apiResponse");
 
-// Initialize Razorpay client with keys from environment variables
-const razorpay = new Razorpay({
-  key_id: process.env.KEY_ID,
-  key_secret: process.env.KEY_SECRET,
+const getRazorpayKeys = () => ({
+  keyId: process.env.KEY_ID || process.env.RAZORPAY_KEY_ID,
+  keySecret: process.env.KEY_SECRET || process.env.RAZORPAY_KEY_SECRET,
 });
+
+let razorpayClient = null;
+
+const getRazorpayClient = () => {
+  const { keyId, keySecret } = getRazorpayKeys();
+  if (!keyId || !keySecret) {
+    return null;
+  }
+  if (!razorpayClient) {
+    razorpayClient = new Razorpay({ key_id: keyId, key_secret: keySecret });
+  }
+  return razorpayClient;
+};
 
 /**
  * @desc    Create a new Razorpay order
@@ -16,6 +28,16 @@ const razorpay = new Razorpay({
  */
 exports.createRazorpayOrder = async (req, res, next) => {
   try {
+    const razorpay = getRazorpayClient();
+    const { keyId } = getRazorpayKeys();
+    if (!razorpay) {
+      return sendError(
+        res,
+        503,
+        "Online payment is not configured. Set KEY_ID and KEY_SECRET on the server."
+      );
+    }
+
     const { orderId } = req.body;
 
     if (!orderId) {
@@ -52,7 +74,7 @@ exports.createRazorpayOrder = async (req, res, next) => {
       razorpayOrderId: razorpayOrder.id,
       amount: razorpayOrder.amount,
       currency: razorpayOrder.currency,
-      keyId: process.env.KEY_ID,
+      keyId,
     });
   } catch (error) {
     next(error);
@@ -66,6 +88,15 @@ exports.createRazorpayOrder = async (req, res, next) => {
  */
 exports.verifyPayment = async (req, res, next) => {
   try {
+    const { keySecret } = getRazorpayKeys();
+    if (!keySecret) {
+      return sendError(
+        res,
+        503,
+        "Online payment is not configured. Set KEY_ID and KEY_SECRET on the server."
+      );
+    }
+
     const { orderId, razorpayPaymentId, razorpayOrderId, razorpaySignature } = req.body;
 
     if (!orderId || !razorpayPaymentId || !razorpayOrderId || !razorpaySignature) {
@@ -75,7 +106,7 @@ exports.verifyPayment = async (req, res, next) => {
     // Verify signature using crypto
     const text = razorpayOrderId + "|" + razorpayPaymentId;
     const generatedSignature = crypto
-      .createHmac("sha256", process.env.KEY_SECRET)
+      .createHmac("sha256", keySecret)
       .update(text)
       .digest("hex");
 
