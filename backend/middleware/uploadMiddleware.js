@@ -1,6 +1,7 @@
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
+const { isCloudinaryConfigured } = require("../config/cloudinary");
 
 const uploadDir = path.join(__dirname, "../uploads/pizzas");
 
@@ -8,14 +9,17 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, uploadDir),
-  filename: (_req, file, cb) => {
-    const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-    const ext = path.extname(file.originalname).toLowerCase();
-    cb(null, `pizza-${unique}${ext}`);
-  },
-});
+// Cloudinary: keep file in memory then upload; otherwise save to disk (local dev)
+const storage = isCloudinaryConfigured()
+  ? multer.memoryStorage()
+  : multer.diskStorage({
+      destination: (_req, _file, cb) => cb(null, uploadDir),
+      filename: (_req, file, cb) => {
+        const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+        const ext = path.extname(file.originalname).toLowerCase();
+        cb(null, `pizza-${unique}${ext}`);
+      },
+    });
 
 const imageFilter = (_req, file, cb) => {
   const allowed = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"];

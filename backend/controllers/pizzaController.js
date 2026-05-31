@@ -2,6 +2,7 @@ const Pizza = require("../models/Pizza");
 const { sendSuccess, sendError } = require("../utils/apiResponse");
 const { PAGINATION } = require("../config/constants");
 const { deletePizzaImageFile } = require("../utils/pizzaImage");
+const { resolveUploadedImageUrl } = require("../utils/cloudinaryUpload");
 
 // ════════════════════════════════════════════════════════════════
 // @desc    Get all pizzas (with pagination, search, filter, sort)
@@ -101,7 +102,7 @@ exports.createPizza = async (req, res, next) => {
 
     let image = "https://via.placeholder.com/300x200?text=Pizza+Image";
     if (req.file) {
-      image = `/uploads/pizzas/${req.file.filename}`;
+      image = (await resolveUploadedImageUrl(req.file)) || image;
     }
 
     const pizza = await Pizza.create({
@@ -151,8 +152,9 @@ exports.updatePizza = async (req, res, next) => {
     });
 
     if (req.file) {
-      deletePizzaImageFile(pizza.image);
-      pizza.image = `/uploads/pizzas/${req.file.filename}`;
+      await deletePizzaImageFile(pizza.image);
+      const newImage = await resolveUploadedImageUrl(req.file);
+      if (newImage) pizza.image = newImage;
     }
 
     const updatedPizza = await pizza.save();
@@ -178,7 +180,7 @@ exports.deletePizza = async (req, res, next) => {
       return sendError(res, 404, "Pizza not found.");
     }
 
-    deletePizzaImageFile(pizza.image);
+    await deletePizzaImageFile(pizza.image);
 
     await Pizza.findByIdAndDelete(req.params.id);
 

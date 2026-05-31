@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import { getPizzaImageUrl } from '../utils/pizzaImage';
+import { getPizzaImageUrl, handlePizzaImageError } from '../utils/pizzaImage';
 
 const Cart = () => {
   const navigate = useNavigate();
@@ -71,6 +71,7 @@ const Cart = () => {
                   <img
                     src={getPizzaImage(item)}
                     alt={item.pizza.name}
+                    onError={(e) => handlePizzaImageError(e, item.pizza.category)}
                     className="w-full h-full object-cover"
                   />
                 </div>

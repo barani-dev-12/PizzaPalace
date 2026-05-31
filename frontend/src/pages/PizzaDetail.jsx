@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { pizzaApi } from '../api/pizzaApi';
 import { useCart } from '../context/CartContext';
-import { getPizzaImageUrl } from '../utils/pizzaImage';
+import { getPizzaImageUrl, handlePizzaImageError } from '../utils/pizzaImage';
 import Spinner from '../components/Spinner';
 import { toast } from 'react-hot-toast';
 
@@ -119,6 +119,7 @@ const PizzaDetail = () => {
           <img
             src={getPizzaImageUrl(image, category)}
             alt={name}
+            onError={(e) => handlePizzaImageError(e, category)}
             className="w-full h-full object-cover"
           />
         </div>

@@ -31,6 +31,16 @@ const validateEnv = () => {
     );
   }
 
+  const hasCloudinary =
+    process.env.CLOUDINARY_CLOUD_NAME &&
+    process.env.CLOUDINARY_API_KEY &&
+    process.env.CLOUDINARY_API_SECRET;
+  if (process.env.NODE_ENV === "production" && !hasCloudinary) {
+    console.warn(
+      "⚠️  Cloudinary not configured — uploaded images on Render will be lost after redeploy. See CLOUDINARY_SETUP.md"
+    );
+  }
+
   return true;
 };
 

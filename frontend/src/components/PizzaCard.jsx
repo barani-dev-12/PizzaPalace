@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { getPizzaImageUrl } from '../utils/pizzaImage';
+import { getPizzaImageUrl, handlePizzaImageError } from '../utils/pizzaImage';
 
 const PizzaCard = ({ pizza }) => {
   const { _id, name, description, category, prices, image, isAvailable } = pizza;
@@ -36,6 +36,7 @@ const PizzaCard = ({ pizza }) => {
         <img
           src={getPizzaImageUrl(image, category)}
           alt={name}
+          onError={(e) => handlePizzaImageError(e, category)}
           className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-110"
           loading="lazy"
         />

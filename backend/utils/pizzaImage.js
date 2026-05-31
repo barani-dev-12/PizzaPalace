@@ -1,8 +1,16 @@
 const fs = require("fs");
 const path = require("path");
+const { deleteCloudinaryImage } = require("./cloudinaryUpload");
 
-const deletePizzaImageFile = (imagePath) => {
-  if (!imagePath || !imagePath.startsWith("/uploads/pizzas/")) {
+const deletePizzaImageFile = async (imagePath) => {
+  if (!imagePath) return;
+
+  if (imagePath.includes("res.cloudinary.com")) {
+    await deleteCloudinaryImage(imagePath);
+    return;
+  }
+
+  if (!imagePath.startsWith("/uploads/pizzas/")) {
     return;
   }
 

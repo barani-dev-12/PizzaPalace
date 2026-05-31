@@ -19,31 +19,37 @@ const paymentRoutes = require("./routes/paymentRoutes");
 
 const app = express();
 
+// CORS must be first so OPTIONS preflight succeeds before body parsers / DB checks
+const corsOptions = {
+  origin(origin, callback) {
+    if (!origin) return callback(null, true);
+    const allowed = [
+      process.env.CLIENT_URL,
+      "http://localhost:3000",
+      "http://127.0.0.1:3000",
+    ].filter(Boolean);
+    const isAllowed =
+      allowed.includes(origin) ||
+      /^https:\/\/[\w.-]+\.vercel\.app$/.test(origin) ||
+      /^http:\/\/localhost:\d+$/.test(origin) ||
+      /^http:\/\/127\.0\.0\.1:\d+$/.test(origin);
+    if (isAllowed) return callback(null, true);
+    console.warn(`CORS blocked origin: ${origin}`);
+    return callback(null, false);
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
+
+app.use(cors(corsOptions));
+app.options(/.*/, cors(corsOptions));
+
 // Parse JSON request bodies
 app.use(express.json({ limit: "10mb" }));
 
 // Parse URL-encoded request bodies
 app.use(express.urlencoded({ extended: true }));
-
-// CORS: Vercel production URL, preview deployments, and local dev
-app.use(
-  cors({
-    origin(origin, callback) {
-      if (!origin) return callback(null, true);
-      const allowed = [
-        process.env.CLIENT_URL,
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-      ].filter(Boolean);
-      const isAllowed =
-        allowed.includes(origin) || /^https:\/\/[\w.-]+\.vercel\.app$/.test(origin);
-      if (isAllowed) return callback(null, true);
-      console.warn(`CORS blocked origin: ${origin}`);
-      return callback(null, false);
-    },
-    credentials: true,
-  })
-);
 
 // Serve uploaded pizza images
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
@@ -80,8 +86,11 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-// Mount route modules (require MongoDB)
-app.use("/api", ensureDb);
+// Mount route modules (require MongoDB; skip OPTIONS preflight)
+app.use("/api", (req, res, next) => {
+  if (req.method === "OPTIONS") return next();
+  return ensureDb(req, res, next);
+});
 app.use("/api/auth", authRoutes);
 app.use("/api/pizzas", pizzaRoutes);
 app.use("/api/orders", orderRoutes);

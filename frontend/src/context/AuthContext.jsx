@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authApi } from '../api/authApi';
+import { API_URL } from '../config/api';
 
 const AuthContext = createContext(null);
 
@@ -39,8 +40,18 @@ export const AuthProvider = ({ children }) => {
 
   const getApiErrorMessage = (error, fallback) => {
     if (!error.response) {
+      if (error.code === 'ECONNABORTED') {
+        return 'Server is waking up (Render free tier). Wait 30–60 seconds and try again.';
+      }
       if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
-        return 'Cannot reach the server. Check that the backend is running on Render and REACT_APP_API_URL is correct.';
+        const apiHint =
+          process.env.NODE_ENV === 'development'
+            ? ` Request URL: ${API_URL}. Restart npm start after editing .env.`
+            : ' If using Vercel, set REACT_APP_API_URL and CLIENT_URL on Render.';
+        return (
+          'Cannot reach the server. Check REACT_APP_API_URL and that the backend is live.' +
+          apiHint
+        );
       }
       return fallback;
     }
