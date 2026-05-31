@@ -4,8 +4,11 @@ const morgan = require("morgan");
 const dotenv = require("dotenv");
 const path = require("path");
 const connectDB = require("./config/db");
+const mongoose = require("mongoose");
 const validateEnv = require("./utils/validateEnv");
+const ensureDb = require("./middleware/ensureDb");
 const { errorHandler, notFound } = require("./middleware/errorMiddleware");
+const { sendSuccess } = require("./utils/apiResponse");
 
 dotenv.config();
 
@@ -27,7 +30,11 @@ app.use(
   cors({
     origin(origin, callback) {
       if (!origin) return callback(null, true);
-      const allowed = [process.env.CLIENT_URL, "http://localhost:3000"].filter(Boolean);
+      const allowed = [
+        process.env.CLIENT_URL,
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+      ].filter(Boolean);
       const isAllowed =
         allowed.includes(origin) || /^https:\/\/[\w.-]+\.vercel\.app$/.test(origin);
       if (isAllowed) return callback(null, true);
@@ -64,7 +71,17 @@ app.get("/", (req, res) => {
   });
 });
 
-// Mount route modules
+// DB health (for debugging registration / API issues on Render)
+app.get("/api/health", (req, res) => {
+  const dbReady = mongoose.connection.readyState === 1;
+  return sendSuccess(res, dbReady ? 200 : 503, dbReady ? "API and database OK" : "Database not connected", {
+    database: dbReady ? "connected" : "disconnected",
+    dbName: mongoose.connection.name || null,
+  });
+});
+
+// Mount route modules (require MongoDB)
+app.use("/api", ensureDb);
 app.use("/api/auth", authRoutes);
 app.use("/api/pizzas", pizzaRoutes);
 app.use("/api/orders", orderRoutes);

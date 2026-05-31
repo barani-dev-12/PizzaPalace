@@ -76,6 +76,34 @@ You should see JSON:
 {"success":true,"message":"Pizza Palace API is running!",...}
 ```
 
+**Registration needs the database**, not just this page. Also open:
+
+https://pizzapalace-5xa5.onrender.com/api/health
+
+You need:
+
+```json
+{"success":true,"message":"API and database OK","data":{"database":"connected",...}}
+```
+
+If you see `"database":"disconnected"` or registration says **buffering timed out**, fix `MONGO_URI`:
+
+- Include database name: `...mongodb.net/pizzapalace?retryWrites=true&w=majority`
+- Atlas → **Network Access** → `0.0.0.0/0`
+- Password in URI must be URL-encoded if it has `@`, `#`, etc.
+
+---
+
+## Registration still fails?
+
+| Symptom | Fix |
+|---------|-----|
+| Toast: **Cannot reach the server** | Wrong `REACT_APP_API_URL` or backend sleeping — wait 60s and retry |
+| Toast: **Password must contain at least one number** | Use e.g. `admin123` (not only letters) |
+| **Email already exists** | Use another email or log in |
+| **Database not connected** (503) | Fix `MONGO_URI` + Atlas network (above) |
+| Works on `/` but not `/api/health` | MongoDB not connected on Render |
+
 First request after sleep can take **30–60 seconds** on the free plan.
 
 ---

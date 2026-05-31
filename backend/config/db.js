@@ -3,9 +3,13 @@ const dbConfig = require("./db.config");
 
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(dbConfig.url);
+    const conn = await mongoose.connect(dbConfig.url, {
+      serverSelectionTimeoutMS: 15000,
+      maxPoolSize: 10,
+    });
 
     console.log(`MongoDB Connected: ${conn.connection.host}`);
+    console.log(`MongoDB Database: ${conn.connection.name}`);
 
     // Connection event listeners for monitoring
     mongoose.connection.on("error", (err) => {

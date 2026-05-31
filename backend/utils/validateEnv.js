@@ -14,6 +14,17 @@ const validateEnv = () => {
     return false;
   }
 
+  const uri = process.env.MONGO_URI.trim();
+  // Atlas URIs should include a database name: ...mongodb.net/pizzapalace?...
+  const hasDbName =
+    /mongodb(\+srv)?:\/\/[^/]+\/[^/?]+/.test(uri) && !uri.includes(".net/?");
+  if (!hasDbName) {
+    console.warn(
+      "⚠️  MONGO_URI may be missing a database name. Example:\n" +
+        "   mongodb+srv://user:pass@cluster.mongodb.net/pizzapalace?retryWrites=true&w=majority"
+    );
+  }
+
   if (!process.env.KEY_ID || !process.env.KEY_SECRET) {
     console.warn(
       "⚠️  KEY_ID / KEY_SECRET not set — online payments disabled (COD still works)."
