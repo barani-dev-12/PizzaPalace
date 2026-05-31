@@ -1,5 +1,21 @@
-require('dotenv').config();
+require("dotenv").config();
+
+const getMongoUrl = () => {
+  const uri = process.env.MONGO_URI?.trim();
+  if (uri) return uri;
+
+  const host = process.env.DB_HOST?.trim();
+  const name = process.env.DB_NAME?.trim();
+  if (host && name) {
+    return `mongodb://${host}/${name}`;
+  }
+
+  return null;
+};
 
 module.exports = {
-    url: process.env.MONGO_URI || `mongodb://${process.env.DB_HOST}/${process.env.DB_NAME}`
-}
+  getMongoUrl,
+  get url() {
+    return getMongoUrl();
+  },
+};

@@ -2,8 +2,18 @@ const mongoose = require("mongoose");
 const dbConfig = require("./db.config");
 
 const connectDB = async () => {
+  const url = dbConfig.getMongoUrl();
+  if (!url) {
+    console.error(
+      "\n❌ MONGO_URI is not set.\n" +
+        "   Render → Environment → add MONGO_URI with your Atlas connection string.\n" +
+        "   Example: mongodb+srv://user:pass@cluster.mongodb.net/pizzapalace?retryWrites=true&w=majority\n"
+    );
+    process.exit(1);
+  }
+
   try {
-    const conn = await mongoose.connect(dbConfig.url, {
+    const conn = await mongoose.connect(url, {
       serverSelectionTimeoutMS: 15000,
       maxPoolSize: 10,
     });

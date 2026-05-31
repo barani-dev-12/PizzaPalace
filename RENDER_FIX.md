@@ -1,5 +1,35 @@
 # Fix Render "Bad Gateway" / Service Unavailable
 
+## Error: `getaddrinfo ENOTFOUND undefined`
+
+Your logs show:
+
+```text
+◇ injected env (0) from .env
+MongoDB Connection Failed: getaddrinfo ENOTFOUND undefined
+```
+
+**Meaning:** `MONGO_URI` is **not set on Render**. The app tried to connect to host `undefined`.
+
+**`injected env (0)` does NOT mean Render has no env support** — it only means there is no `.env` **file** in the repo (correct). You must add variables in the **Render dashboard**, not in a committed `.env` file.
+
+### Fix (5 minutes)
+
+1. [dashboard.render.com](https://dashboard.render.com) → your web service → **Environment**
+2. Click **Add Environment Variable**
+3. Key: `MONGO_URI`  
+   Value: paste from **MongoDB Atlas → Connect → Drivers**, e.g.  
+   `mongodb+srv://USER:PASSWORD@pizzapalace.mx0ulgk.mongodb.net/pizzapalace?retryWrites=true&w=majority`  
+   - Replace `USER` and `PASSWORD`  
+   - Include `/pizzapalace` (database name) before `?`
+4. Also add: `JWT_SECRET`, `NODE_ENV`=`production`, `KEY_ID`, `KEY_SECRET`
+5. **Save Changes** → wait for automatic redeploy
+6. **Logs** should show: `MongoDB Connected: ...` **before** `Running on port`
+
+---
+
+# Fix Render "Bad Gateway" / Service Unavailable
+
 Your URL: **https://pizzapalace-5xa5.onrender.com**
 
 That page means the Node process **crashed or never started**. Fix it in the Render dashboard (not in `.env` on GitHub).
