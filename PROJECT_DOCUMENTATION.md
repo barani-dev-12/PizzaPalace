@@ -209,7 +209,7 @@ Routes are split into **public**, **customer (protected)**, and **admin**.
 | `orderApi.js` | Place order, history, admin order management |
 | `paymentApi.js` | Razorpay create + verify |
 
-Base URL: `REACT_APP_API_URL` (default `http://localhost:5000`)
+Base URL: `REACT_APP_API_URL` (production: `https://pizzapalace-5xa5.onrender.com`, local fallback: `http://localhost:5000`)
 
 ### 4.6 Key Components
 
@@ -237,9 +237,11 @@ Base URL: `REACT_APP_API_URL` (default `http://localhost:5000`)
 ### 4.8 Environment Variables (Frontend)
 
 ```
-REACT_APP_API_URL=http://localhost:5000
+REACT_APP_API_URL=https://pizzapalace-5xa5.onrender.com
 REACT_APP_RAZORPAY_KEY=rzp_test_...
 ```
+
+For local backend development only, use `http://localhost:5000` instead (e.g. in `.env.development.local`).
 
 ---
 
@@ -294,11 +296,26 @@ npm start
 ```
 
 - Frontend: http://localhost:3000
-- Backend API: http://localhost:5000
+- Backend API (local): http://localhost:5000
+- Backend API (production): https://pizzapalace-5xa5.onrender.com
 
 ---
 
-## 8. Data Flow Diagram
+## 8. Deployment
+
+| Service | URL |
+|---------|-----|
+| **Backend (Render)** | https://pizzapalace-5xa5.onrender.com |
+| **API base** | `REACT_APP_API_URL` → requests go to `/api/*` |
+| **Health check** | https://pizzapalace-5xa5.onrender.com/ |
+
+**Render:** Set `CLIENT_URL` to your Vercel frontend URL (e.g. `https://your-app.vercel.app`) so CORS allows the browser to call the API.
+
+**Vercel:** Set `REACT_APP_API_URL=https://pizzapalace-5xa5.onrender.com` and `REACT_APP_RAZORPAY_KEY` in project environment variables, then redeploy.
+
+---
+
+## 9. Data Flow Diagram
 
 ```mermaid
 flowchart TB
