@@ -37,6 +37,20 @@ export const AuthProvider = ({ children }) => {
     initializeAuth();
   }, []);
 
+  const getApiErrorMessage = (error, fallback) => {
+    if (!error.response) {
+      if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
+        return 'Cannot reach the server. Check that the backend is running on Render and REACT_APP_API_URL is correct.';
+      }
+      return fallback;
+    }
+    const data = error.response.data;
+    if (data?.errors?.length) {
+      return data.errors.map((e) => e.message).join(' ');
+    }
+    return data?.message || fallback;
+  };
+
   const login = async (email, password) => {
     try {
       const response = await authApi.login(email, password);
@@ -56,7 +70,7 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       return {
         success: false,
-        message: error.response?.data?.message || 'Invalid email or password.'
+        message: getApiErrorMessage(error, 'Invalid email or password.'),
       };
     }
   };
@@ -80,7 +94,7 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       return {
         success: false,
-        message: error.response?.data?.message || 'Registration failed.'
+        message: getApiErrorMessage(error, 'Registration failed.'),
       };
     }
   };

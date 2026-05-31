@@ -35,6 +35,16 @@ const Signup = () => {
       return;
     }
 
+    if (!/\d/.test(formData.password)) {
+      toast.error('Password must contain at least one number');
+      return;
+    }
+
+    if (formData.name.trim().length < 2) {
+      toast.error('Name must be at least 2 characters');
+      return;
+    }
+
     setLoading(true);
     try {
       const result = await register(formData.name, formData.email, formData.password);
@@ -107,7 +117,7 @@ const Signup = () => {
             <input
               type="password"
               name="password"
-              placeholder="Minimum 6 characters"
+              placeholder="Min 6 characters, include a number"
               value={formData.password}
               onChange={handleChange}
               className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 font-medium text-sm transition-all"

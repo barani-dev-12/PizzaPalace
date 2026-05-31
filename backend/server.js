@@ -4,8 +4,8 @@ const morgan = require("morgan");
 const dotenv = require("dotenv");
 const path = require("path");
 const connectDB = require("./config/db");
+const validateEnv = require("./utils/validateEnv");
 const { errorHandler, notFound } = require("./middleware/errorMiddleware");
-
 
 dotenv.config();
 
@@ -15,8 +15,6 @@ const orderRoutes = require("./routes/orderRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 
 const app = express();
-
-connectDB();
 
 // Parse JSON request bodies
 app.use(express.json({ limit: "10mb" }));
@@ -33,7 +31,8 @@ app.use(
       const isAllowed =
         allowed.includes(origin) || /^https:\/\/[\w.-]+\.vercel\.app$/.test(origin);
       if (isAllowed) return callback(null, true);
-      return callback(new Error(`CORS blocked for origin: ${origin}`));
+      console.warn(`CORS blocked origin: ${origin}`);
+      return callback(null, false);
     },
     credentials: true,
   })
@@ -80,12 +79,25 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`\n🍕 ═══════════════════════════════════════════════`);
-  console.log(`   Pizza Palace API Server`);
-  console.log(`   Running on port ${PORT}`);
-  console.log(`   Environment: ${process.env.NODE_ENV || "development"}`);
-  console.log(`═══════════════════════════════════════════════════\n`);
+const startServer = async () => {
+  if (!validateEnv()) {
+    process.exit(1);
+  }
+
+  await connectDB();
+
+  app.listen(PORT, "0.0.0.0", () => {
+    console.log(`\n🍕 ═══════════════════════════════════════════════`);
+    console.log(`   Pizza Palace API Server`);
+    console.log(`   Running on port ${PORT}`);
+    console.log(`   Environment: ${process.env.NODE_ENV || "development"}`);
+    console.log(`═══════════════════════════════════════════════════\n`);
+  });
+};
+
+startServer().catch((err) => {
+  console.error("Failed to start server:", err.message);
+  process.exit(1);
 });
 
 module.exports = app;
