@@ -1,0 +1,8 @@
+# Root: ignore env files anywhere in the monorepo
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db
