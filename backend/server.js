@@ -30,7 +30,7 @@ const corsOptions = {
     ].filter(Boolean);
     const isAllowed =
       allowed.includes(origin) ||
-      /^https:\/\/[\w.-]+\.vercel\.app$/.test(origin) ||
+      /\.vercel\.app$/.test(origin) ||
       /^http:\/\/localhost:\d+$/.test(origin) ||
       /^http:\/\/127\.0\.0\.1:\d+$/.test(origin);
     if (isAllowed) return callback(null, true);
@@ -86,7 +86,6 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-// Mount route modules (require MongoDB; skip OPTIONS preflight)
 app.use("/api", (req, res, next) => {
   if (req.method === "OPTIONS") return next();
   return ensureDb(req, res, next);
@@ -113,11 +112,9 @@ const startServer = async () => {
   await connectDB();
 
   app.listen(PORT, "0.0.0.0", () => {
-    console.log(`\n🍕 ═══════════════════════════════════════════════`);
     console.log(`   Pizza Palace API Server`);
     console.log(`   Running on port ${PORT}`);
     console.log(`   Environment: ${process.env.NODE_ENV || "development"}`);
-    console.log(`═══════════════════════════════════════════════════\n`);
   });
 };
 

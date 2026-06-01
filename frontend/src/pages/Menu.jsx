@@ -3,10 +3,12 @@ import { useSearchParams } from 'react-router-dom';
 import { pizzaApi } from '../api/pizzaApi';
 import PizzaCard from '../components/PizzaCard';
 import Spinner from '../components/Spinner';
+import { toast } from 'react-hot-toast';
 
 const Menu = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const initialSearch = searchParams.get('search') || '';
+  const searchFromUrl = searchParams.get('search') || '';
+  const initialSearch = searchFromUrl;
 
   // Filter & Search states
   const [search, setSearch] = useState(initialSearch);
@@ -27,12 +29,11 @@ const Menu = () => {
   });
   const [loading, setLoading] = useState(true);
 
-  // Sync search state with query param if it changes from outside (e.g. Hero search)
+  // Sync search state with URL query (use string dep — searchParams object changes every render)
   useEffect(() => {
-    const searchParamVal = searchParams.get('search') || '';
-    setSearch(searchParamVal);
-    setPage(1); // Reset to page 1 on new search
-  }, [searchParams]);
+    setSearch(searchFromUrl);
+    setPage(1);
+  }, [searchFromUrl]);
 
   // Fetch pizzas from backend when filters change
   useEffect(() => {
@@ -64,6 +65,11 @@ const Menu = () => {
         }
       } catch (error) {
         console.error('Error fetching pizzas:', error);
+        setPizzas([]);
+        const msg = error.code === 'ECONNABORTED'
+          ? 'Server is waking up. Wait a minute and refresh.'
+          : error.response?.data?.message || 'Could not load menu. Check API connection.';
+        toast.error(msg);
       } finally {
         setLoading(false);
       }
